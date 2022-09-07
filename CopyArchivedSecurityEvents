@@ -1,0 +1,20 @@
+# Attribution:  1800Zeta 
+# https://marklewis.blog/2017/06/27/security-logs-archive-them-off/
+
+# Find the security logs and loop through them
+$files = Get-ChildItem 'C:\Windows\System32\Winevt\Logs\' -filter 'Archive-Security-*'
+
+foreach($file in $files)
+{
+    # Time to upload the files tehn delete from the disk
+    $filename = "C:\Windows\System32\Winevt\Logs\$file"
+    $destFileName = "$domainname/$env:COMPUTERNAME/$file"
+    $destFileName = $destFileName.ToLower()
+    $fileupload = Set-AzureStorageBlobContent -File $filename -container $containerName -Blob $destFileName -context $blobContext -Force
+    $dstsize = $fileupload.Length
+    $filesize = $file.Length
+    if($dstsize -eq $filesize)
+    {
+        Remove-Item $filename
+    }
+}

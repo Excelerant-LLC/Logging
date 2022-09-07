@@ -3,3 +3,41 @@ Archive an Event Log / wevtutil
 Solarwinds Soln:
   https://thwack.solarwinds.com/resources/b/geek-speak/posts/how-to-archive-windows-event-logs-in-a-syslog-server
   
+From https://stackoverflow.com/questions/60551581/powershell-get-eventlogs-based-on-date-range
+    =======================================================
+    $startDate = (Get-Date -Year 2020 -Month 1 -Day 7).Date   # .Date makes it midnight
+    $endDate   = (Get-Date -Year 2020 -Month 2 -Day 6).Date
+
+    Get-WinEvent -ProviderName $ProviderName -MaxEvents 64000 -ErrorAction SilentlyContinue | 
+        Where-Object { $_.id -in $EventID -and $_.Timecreated -ge $startDate -and $_.Timecreated -lt $endDate } |
+        Sort-Object TimeCreated -Descending | Export-Csv $Path -NoTypeInformation
+    =======================================================    
+    # Uses a hashtable (@{...} 
+    get-winevent @{ providername = 'esent'; id = 916;
+      starttime = '1/7'; endtime = '2/6' } -MaxEvents 3
+
+======================================================= 
+
+Get-Eventlog -LogName application -EntryType Error,Warning | Export-csv application_logs.csv | Get-Eventlog -LogName System -EntryType Error,Warning | Export-Clixml system_logs.csv
+
+=======================================================
+https://www.sqlserver-dba.com/2016/01/powershell-script-how-to-get-windows-logs-events-with-get-winevent-for-a-date-range.html
+For filtering event log details I use the Get-WinEvent Powershell cmdlet. The -FilterHastable switch  manages the parameters . Let’s look at some  basic examples.
+
+  Example 1 : Find all events from the System log of the event id 36874 between the 01/12/15 and 21/12/15
+
+    Get-WinEvent -FilterHashtable @{logname='system';id=36874;StartTime="01/12/15";EndTime="21/12/15"}
+
+  Example 2: Find all events from the Application log between a date range 
+
+    Get-WinEvent -FilterHashtable @{logname='application;id=256;StartTime="01/01/16";EndTime="21/01/16"}
+
+  Example 3 : Find all events from the Application log between a date range and limit results to 10
+
+    Get-WinEvent -FilterHashtable @{logname='application;id=256;StartTime="01/01/16";EndTime="21/01/16"}  -MaxEvents 10
+
+  These Get-WinEvent examples will get you started on extracting Windows Events. One of the interesting thing about Get-WinEvent is the capacity to extract messages from different Event log providers.
+
+  Use the -ListLog switch in the Get-WinEvent powershell cmdlet to extract the list of logs on a machine . You’ll be amazed at the list of log sets and types available. There is great potential in combining resultsets from different logs when troubleshooting
+
+    Get-WinEvent –ListLog *
